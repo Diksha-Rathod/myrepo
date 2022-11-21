@@ -1,6 +1,7 @@
 import { Request, Response } from "express";
 import { decode } from "jsonwebtoken";
-import { userInfo } from "os";
+import { getRepository } from "typeorm";
+
 import { User } from "../src/Entity/user";
 const jwt = require("jsonwebtoken");
 export let authUser = async (req, res) => {
@@ -11,17 +12,18 @@ export let authUser = async (req, res) => {
   if (!token) res.status(500).json({ message: "No token found" });
   else {
     try {
+      let userRepository = getRepository(User);
       decoded = await jwt.verify(token, "Mysecretkey");
       console.log(decoded, "decode.......");
-      const result = User.findOne({
-          where: { email: decoded.email, id: decoded.id },
+      const result = await userRepository.findOne({
+        where: { email: decoded.email, id: decoded.id },
       });
       console.log(result);
 
-      if (result != decoded) {
+      if (!result) {
         res.status(400).json({ success: false });
       } else {
-        res.status(200).json({ decode });
+        res.status(200).json({ decoded });
       }
     } catch (err) {
       console.log(err);
